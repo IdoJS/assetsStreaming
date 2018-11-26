@@ -3,7 +3,7 @@ import Notification from '../Notification';
 import {checkTypingReachAssetMaxLength, isEqualString} from '../../utils';
 import PropTypes from 'prop-types';
 
-const NOTIFICATION_TIMER_MILISECOND = 5000;
+const NOTIFICATION_TIMER_MILLISECOND = 5000;
 
 class AssetsFormHeader extends React.Component {
   static defaultProps = {
@@ -99,7 +99,7 @@ class AssetsFormHeader extends React.Component {
       this.setState({
         showNotification: false
       });
-    }, NOTIFICATION_TIMER_MILISECOND);
+    }, NOTIFICATION_TIMER_MILLISECOND);
   }
 
   render() {
