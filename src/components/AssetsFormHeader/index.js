@@ -1,22 +1,30 @@
 import React from 'react';
 import Notification from '../Notification';
+import {checkTypingReachAssetMaxLength, isEqualString} from '../../utils';
 import PropTypes from 'prop-types';
+
+const NOTIFICATION_TIMER_MILISECOND = 5000;
 
 class AssetsFormHeader extends React.Component {
   static defaultProps = {
-    assets: []
+    assets: [],
+    isAutoFill : false,
+    clickedAsset : {}
   };
 
   static propTypes = {
-    assets: PropTypes.array.isRequired
+    assets: PropTypes.array.isRequired,
+    isAutoFill : PropTypes.bool.isRequired,
+    clickedAsset : PropTypes.object.isRequired
+
   };
 
   state = {
     showNotification: false,
     buyAssetValues: {},
-    assetName: this.props.assetName,
-    id: this.props.id,
-    price: this.props.price,
+    assetName: '',
+    id: '',
+    price: '',
     enableButton: false
   };
 
@@ -33,7 +41,7 @@ class AssetsFormHeader extends React.Component {
     const { assetName = '', id = '', price = '' } = nextProps.clickedAsset;
 
     let state = {
-      enableButton: !(nextProps.assets.length === 1 || (assetName.toString().length === 5 && id.toString().length === 5))
+      enableButton: !(nextProps.assets.length === 1 || (checkTypingReachAssetMaxLength(assetName) && checkTypingReachAssetMaxLength(id)))
     };
     if (nextProps.isAutoFill) {
       state = Object.assign(state, {
@@ -55,6 +63,8 @@ class AssetsFormHeader extends React.Component {
   }
 
   inputTyping(ev) {
+    ev.preventDefault();
+
     this.setState({
       [ev.target.name]: ev.target.value
     });
@@ -69,7 +79,9 @@ class AssetsFormHeader extends React.Component {
   }
 
   buyAsset(ev) {
-    const buyIn = this.props.assets.filter(asset => asset.id === this.state.id && asset.assetName === this.state.assetName);
+    ev.preventDefault();
+
+    const buyIn = this.props.assets.filter(asset => isEqualString(asset.id, this.state.id) && isEqualString(asset.assetName, this.state.assetName));
 
     if (buyIn.length === 1) {
       this.setState({
@@ -83,20 +95,20 @@ class AssetsFormHeader extends React.Component {
       this.setState({
         showNotification: false
       });
-    }, 5000);
+    }, NOTIFICATION_TIMER_MILISECOND);
   }
   render() {
     return (
-      <div className="assets-header">
-        <div className="assets-header-input">
+      <div className='assets-header'>
+        <div className='assets-header-input'>
           <span>Asset Name</span>
-          <input name="assetName" type="text" onChange={this.inputTyping} value={this.state.assetName} />
+          <input name='assetName' type='text' onChange={this.inputTyping} value={this.state.assetName} />
           <span>Asset Id</span>
-          <input name="id" type="text" onChange={this.inputTyping} value={this.state.id} />
+          <input name='id' type='text' onChange={this.inputTyping} value={this.state.id} />
           <span>Asset Price</span>
-          <input disabled="true" type="text" value={this.state.price} />
+          <input disabled={true} type='text' value={this.state.price} />
         </div>
-        <button className="assets-header-button" disabled={this.state.enableButton} onClick={this.buyAsset}>
+        <button className='assets-header-button' disabled={this.state.enableButton} onClick={this.buyAsset}>
           Buy
         </button>
         {this.state.showNotification ? <Notification {...this.state.buyAssetValues} /> : null}

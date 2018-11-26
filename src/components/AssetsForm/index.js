@@ -1,9 +1,8 @@
 import React from 'react';
-import {Observable} from 'rxjs/Observable';
 import {BehaviorSubject} from 'rxjs/BehaviorSubject';
-import Rx from 'rxjs/Rx';
-import {bufferTime, debounceTime, combineLatest} from 'rxjs/operators';
-import {isSubstring, isEqualString} from '../../utils';
+import {combineLatest} from 'rxjs/observable/combineLatest';
+import {bufferTime} from 'rxjs/operators';
+import {isSubstring, isEqualString, checkTypingReachAssetMaxLength} from '../../utils';
 import {mock} from '../../__mocks__/mock';
 
 import AssetsFormList from '../AssetsFormList';
@@ -28,30 +27,21 @@ class AssetsForm extends React.Component {
 
     this.id = '';
     this.assetName = '';
+    this.clickedAsset = {};
+    this.autoFill = false;
   }
 
   componentDidMount() {
     this.assets = {};
     this.mock$ = mock.pipe(bufferTime(1000));
 
-    this.conbine$ = Rx.Observable.combineLatest(this.mock$, this.onFilterName$, this.onFilterId$)
-      .map(all => {
-        const [assets, filterName, filterId] = all;
-        return assets.filter(asset => {
-          return isSubstring(asset.assetName, filterName) && isSubstring(asset.id, filterId);
-        });
-      })
-      .do(assets => {
-        let clickedAsset = [];
-        if (this.autoFill) {
-          clickedAsset = assets.filter(asset => isEqualString(asset.id, this.id) || isEqualString(asset.assetName, this.assetName));
-        }
-        this.setState({
-          assets,
-          clickedAsset: clickedAsset.length === 1 ? clickedAsset[0] : {}
-        });
-      })
-      .subscribe();
+    this.conbine$ = combineLatest(this.mock$, this.onFilterName$, this.onFilterId$)
+      .map(all => this.filterAssetList(...all))
+      .do(assets => this.checkAutoFillHeader(assets))
+      .subscribe(assets => this.setState({
+        assets,
+        clickedAsset : this.clickedAsset
+      }));
   }
 
   componentWillUnmount() {
@@ -60,8 +50,29 @@ class AssetsForm extends React.Component {
     }
   }
 
+  /**
+   * Return filtered array of assets.
+   * @param assets
+   * @param filterName
+   * @param filterId
+   */
+  filterAssetList(assets, filterName, filterId) {
+    return assets.filter(asset => {
+      return isSubstring(asset.assetName, filterName) && isSubstring(asset.id, filterId);
+    });
+  }
+
+  /**
+   * Set asset data in the form header
+   * @param assets
+   */
+  checkAutoFillHeader(assets) {
+    const clickedAsset = !this.autoFill ? [] : assets.filter(asset => isEqualString(asset.id, this.id) || isEqualString(asset.assetName, this.assetName));
+    this.clickedAsset = clickedAsset.length === 1 ? clickedAsset[0] : {};
+  }
+
   filterItemsID(value) {
-    if (value.toString().length === 5) {
+    if (checkTypingReachAssetMaxLength(value)) {
       this.autoFill = true;
       this.id = value;
     } else {
@@ -73,7 +84,7 @@ class AssetsForm extends React.Component {
   }
 
   filterItemsName(value) {
-    if (value.toString().length === 5) {
+    if (checkTypingReachAssetMaxLength(value)) {
       this.autoFill = true;
       this.assetName = value;
     } else {
@@ -91,7 +102,7 @@ class AssetsForm extends React.Component {
 
   render() {
     return (
-      <div className="ui form asset-form">
+      <div className='ui form asset-form'>
         <AssetsFormHeader
           assets={this.state.assets}
           filterItemsName={this.filterItemsName}

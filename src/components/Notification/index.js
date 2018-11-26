@@ -1,17 +1,18 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 const Notification = props => {
   const { assetName, id, price } = props;
 
   return (
-    <div className="buy-asset-notification slide-in-out">
-      <div className="ui message ">
+    <div className='buy-asset-notification slide-in-out'>
+      <div className='ui message '>
         <span>Asset Name: </span>
         <span>{assetName}</span>
-        <div class="ui section divider" />
+        <div className='ui section divider' />
         <span>Asset Id: </span>
         <span>{id}</span>
-        <div class="ui section divider" />
+        <div className='ui section divider' />
         <span>Asset Price: </span>
         <span>{price}</span>
       </div>
@@ -19,12 +20,16 @@ const Notification = props => {
   );
 };
 
-/*
-<div class="ui message">
-  <div class="header">
-    Changes in Service
-  </div>
-  <p>We just updated our privacy policy here to better service our customers. We recommend reviewing the changes.</p>
-</div>
-*/
+Notification.propTypes = {
+  assetName : PropTypes.string.isRequired,
+  id : PropTypes.number.isRequired,
+  price: PropTypes.number.isRequired
+};
+
+Notification.defaultProps = {
+  assetName : '',
+  id : 0,
+  price: 0
+};
+
 export default Notification;
