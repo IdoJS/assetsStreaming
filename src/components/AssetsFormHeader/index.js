@@ -34,10 +34,8 @@ class AssetsFormHeader extends React.Component {
 
     this.notificationTimer = null;
 
-
     this.buyAsset = this.buyAsset.bind(this);
     this.inputTyping = this.inputTyping.bind(this);
-
   }
 
 
@@ -106,12 +104,12 @@ class AssetsFormHeader extends React.Component {
     return (
       <div className='assets-header'>
         <div className='assets-header-input'>
-          <span>Asset Name</span>
+          <div>Asset Name</div>
           <input name='assetName' type='text' onChange={this.inputTyping} value={this.state.assetName}
                  placeholder={this.state.placeholder}/>
-          <span>Asset Id</span>
+          <div>Asset Id</div>
           <input name='id' type='text' onChange={this.inputTyping} value={this.state.id}/>
-          <span>Asset Price</span>
+          <div>Asset Price</div>
           <input disabled={true} type='text' value={this.state.price}/>
         </div>
         <button className='assets-header-button' disabled={this.state.enableButton} onClick={this.buyAsset}>

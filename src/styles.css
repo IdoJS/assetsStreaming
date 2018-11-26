@@ -21,7 +21,7 @@ label {
 body {
     line-height: 1;
     padding: 20px;
-    width: 600px;
+    width: 800px;
 }
 
 *,
@@ -35,14 +35,6 @@ body {
     flex-direction: column;
 }
 
-.assets-list {
-    padding-top: 20px;
-}
-
-.assets-list-item {
-    cursor: pointer;
-}
-
 .assets-header {
     display: flex;
     padding-bottom: 20px;
@@ -50,17 +42,13 @@ body {
 
 .assets-header-input {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-around;
 }
 
-.assets-header-input > input {
-    width: 20%;
+.assets-header-input > * {
+    padding: 0 5px;
 }
 
-.assets-suggest-list {
-    max-height: 200px;
-    overflow-y: auto;
-}
 
 .assets-suggest-list-item {
     align-items: center;

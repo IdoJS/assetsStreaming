@@ -6,7 +6,6 @@ import {isSubstring, isEqualString, checkTypingReachAssetMaxLength} from '../../
 import {mock} from '../../__mocks__/mock';
 
 import AssetsSuggestions from '../AssetsSuggestions';
-import AssetsFormList from '../AssetsFormList';
 import AssetsFormHeader from '../AssetsFormHeader';
 
 class AssetsForm extends React.Component {
@@ -15,7 +14,6 @@ class AssetsForm extends React.Component {
 
     this.state = {
       assets: [],
-      filter: '',
       clickedAsset: {},
       suggestionsList: []
     };
@@ -24,7 +22,7 @@ class AssetsForm extends React.Component {
     this.onFilterName$ = new BehaviorSubject('');
     this.suggestionName$ = new BehaviorSubject('');
 
-    this.suggestions = this.suggestions.bind(this);
+    this.generateSuggestionList = this.generateSuggestionList.bind(this);
     this.filterItemsID = this.filterItemsID.bind(this);
     this.filterItemsName = this.filterItemsName.bind(this);
     this.fillInputFieldWithData = this.fillInputFieldWithData.bind(this);
@@ -48,7 +46,7 @@ class AssetsForm extends React.Component {
       }));
 
     this.suggestionName$
-      .do(this.suggestions)
+      .do(this.generateSuggestionList)
       .subscribe();
   }
 
@@ -83,7 +81,11 @@ class AssetsForm extends React.Component {
     this.clickedAsset = clickedAsset.length === 1 ? clickedAsset[0] : {};
   }
 
-  suggestions(name) {
+  /**
+   * Filter the assets and generate suggestion list
+   * @param name
+   */
+  generateSuggestionList(name) {
     if (name.length > 1) {
       this.setState({
         suggestionsList: this.state.assets.filter(asset => isSubstring(asset.assetName, name)) || []
@@ -127,6 +129,8 @@ class AssetsForm extends React.Component {
   }
 
   render() {
+    const suggestions = this.state.suggestionsList.length > 0 ? <AssetsSuggestions assets={this.state.suggestionsList}
+                                                                                   fillInputFieldWithData={this.fillInputFieldWithData}/> : null;
     return (
       <div className='asset-form'>
         <div className='ui form'>
@@ -136,12 +140,8 @@ class AssetsForm extends React.Component {
             filterItemsID={this.filterItemsID}
             clickedAsset={this.state.clickedAsset}
             isAutoFill={this.autoFill}
-
           />
-          {this.state.suggestionsList.length > 0 ? <AssetsSuggestions assets={this.state.suggestionsList}
-                                                           fillInputFieldWithData={this.fillInputFieldWithData}/> : null}
-          <AssetsFormList assets={this.state.assets} filter={this.state.filter}
-                          fillInputFieldWithData={this.fillInputFieldWithData}/>
+          {suggestions}
         </div>
       </div>
     );

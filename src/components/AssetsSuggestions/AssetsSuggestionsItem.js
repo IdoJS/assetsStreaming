@@ -10,6 +10,7 @@ const AssetsSuggestionsItems = props => {
       }}
     >
       <h3>{props.assetName}</h3>
+      <h3>{props.id}</h3>
     </div>
   );
 };

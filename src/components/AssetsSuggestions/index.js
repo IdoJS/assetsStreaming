@@ -22,7 +22,7 @@ class AssetsSuggestions extends React.Component{
     const assets = this.props.assets
       .map((asset, key) => <AssetsSuggestionsItem {...asset} key={key} fillInputFieldWithData={this.props.fillInputFieldWithData} />);
 
-    return <div className='ui six cards assets-suggest-list'>{assets}</div>;
+    return <div className='ui two cards assets-suggest-list'>{assets}</div>;
   }
 }
 
