@@ -1,0 +1,71 @@
+html,
+body,
+div,
+span,
+h1,
+h2,
+h3,
+p,
+ul,
+li,
+form,
+label {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font: inherit;
+  vertical-align: baseline;
+}
+
+body {
+  line-height: 1;
+  padding: 20px;
+  width:600px;
+}
+
+*,
+:before,
+:after {
+  box-sizing: border-box;
+}
+
+.assets-list {
+  padding-top: 20px;
+}
+
+.assets-header {
+  display: flex;
+}
+.assets-header-input {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  margin: 0 5px;
+}
+
+.assets-header-button {
+  width: 25%;
+}
+
+.buy-asset-notification {
+  position: absolute;
+  right: -100px;
+  z-index: 99;
+}
+
+.slide-in-out {
+  animation: slide 5s forwards;
+}
+
+@keyframes slide {
+  30% {
+    right: 0;
+  }
+  70% {
+    right: 100;
+  }
+  100% {
+    right: -100;
+  }
+}
