@@ -6,7 +6,7 @@ const AssetsFormList = props => {
   const assets = props.assets
     .map((asset, key) => <AssetsFormListItem {...asset} key={key} fillInputFieldWithData={props.fillInputFieldWithData} />);
 
-  return <div className='ui one cards assets-list'>{assets}</div>;
+  return <div className='ui two cards assets-list'>{assets}</div>;
 };
 
 AssetsFormList.propTypes = {

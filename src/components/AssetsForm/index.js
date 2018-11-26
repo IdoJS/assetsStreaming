@@ -5,6 +5,7 @@ import {bufferTime} from 'rxjs/operators';
 import {isSubstring, isEqualString, checkTypingReachAssetMaxLength} from '../../utils';
 import {mock} from '../../__mocks__/mock';
 
+import AssetsSuggestions from '../AssetsSuggestions';
 import AssetsFormList from '../AssetsFormList';
 import AssetsFormHeader from '../AssetsFormHeader';
 
@@ -15,12 +16,15 @@ class AssetsForm extends React.Component {
     this.state = {
       assets: [],
       filter: '',
-      clickedAsset: {}
+      clickedAsset: {},
+      suggestionsList: []
     };
 
     this.onFilterId$ = new BehaviorSubject('');
     this.onFilterName$ = new BehaviorSubject('');
+    this.suggestionName$ = new BehaviorSubject('');
 
+    this.suggestions = this.suggestions.bind(this);
     this.filterItemsID = this.filterItemsID.bind(this);
     this.filterItemsName = this.filterItemsName.bind(this);
     this.fillInputFieldWithData = this.fillInputFieldWithData.bind(this);
@@ -40,13 +44,21 @@ class AssetsForm extends React.Component {
       .do(assets => this.checkAutoFillHeader(assets))
       .subscribe(assets => this.setState({
         assets,
-        clickedAsset : this.clickedAsset
+        clickedAsset: this.clickedAsset
       }));
+
+    this.suggestionName$
+      .do(this.suggestions)
+      .subscribe();
   }
 
   componentWillUnmount() {
     if (this.conbine$) {
       this.conbine$.unsubscribe();
+    }
+
+    if (this.suggestionName$) {
+      this.suggestionName$.unsubscribe();
     }
   }
 
@@ -71,6 +83,18 @@ class AssetsForm extends React.Component {
     this.clickedAsset = clickedAsset.length === 1 ? clickedAsset[0] : {};
   }
 
+  suggestions(name) {
+    if (name.length > 1) {
+      this.setState({
+        suggestionsList: this.state.assets.filter(asset => isSubstring(asset.assetName, name)) || []
+      })
+    } else {
+      this.setState({
+        suggestionsList: []
+      });
+    }
+  }
+
   filterItemsID(value) {
     if (checkTypingReachAssetMaxLength(value)) {
       this.autoFill = true;
@@ -84,6 +108,8 @@ class AssetsForm extends React.Component {
   }
 
   filterItemsName(value) {
+    this.suggestionName$.next(value);
+
     if (checkTypingReachAssetMaxLength(value)) {
       this.autoFill = true;
       this.assetName = value;
@@ -102,16 +128,21 @@ class AssetsForm extends React.Component {
 
   render() {
     return (
-      <div className='ui form asset-form'>
-        <AssetsFormHeader
-          assets={this.state.assets}
-          filterItemsName={this.filterItemsName}
-          filterItemsID={this.filterItemsID}
-          clickedAsset={this.state.clickedAsset}
-          isAutoFill={this.autoFill}
-        />
-        <AssetsFormList assets={this.state.assets} filter={this.state.filter}
-                        fillInputFieldWithData={this.fillInputFieldWithData}/>
+      <div className='asset-form'>
+        <div className='ui form'>
+          <AssetsFormHeader
+            assets={this.state.assets}
+            filterItemsName={this.filterItemsName}
+            filterItemsID={this.filterItemsID}
+            clickedAsset={this.state.clickedAsset}
+            isAutoFill={this.autoFill}
+
+          />
+          {this.state.suggestionsList.length > 0 ? <AssetsSuggestions assets={this.state.suggestionsList}
+                                                           fillInputFieldWithData={this.fillInputFieldWithData}/> : null}
+          <AssetsFormList assets={this.state.assets} filter={this.state.filter}
+                          fillInputFieldWithData={this.fillInputFieldWithData}/>
+        </div>
       </div>
     );
   }

@@ -8,15 +8,16 @@ const NOTIFICATION_TIMER_MILISECOND = 5000;
 class AssetsFormHeader extends React.Component {
   static defaultProps = {
     assets: [],
-    isAutoFill : false,
-    clickedAsset : {}
+    isAutoFill: false,
+    clickedAsset: {},
+    fillInputFieldWithData : ()=>{}
   };
 
   static propTypes = {
     assets: PropTypes.array.isRequired,
-    isAutoFill : PropTypes.bool.isRequired,
-    clickedAsset : PropTypes.object.isRequired
-
+    isAutoFill: PropTypes.bool.isRequired,
+    clickedAsset: PropTypes.object.isRequired,
+    fillInputFieldWithData: PropTypes.func.isRequired
   };
 
   state = {
@@ -33,12 +34,15 @@ class AssetsFormHeader extends React.Component {
 
     this.notificationTimer = null;
 
+
     this.buyAsset = this.buyAsset.bind(this);
     this.inputTyping = this.inputTyping.bind(this);
+
   }
 
+
   componentWillReceiveProps(nextProps) {
-    const { assetName = '', id = '', price = '' } = nextProps.clickedAsset;
+    const {assetName = '', id = '', price = ''} = nextProps.clickedAsset;
 
     let state = {
       enableButton: !(nextProps.assets.length === 1 || (checkTypingReachAssetMaxLength(assetName) && checkTypingReachAssetMaxLength(id)))
@@ -80,8 +84,8 @@ class AssetsFormHeader extends React.Component {
 
   buyAsset(ev) {
     ev.preventDefault();
-
-    const buyIn = this.props.assets.filter(asset => isEqualString(asset.id, this.state.id) && isEqualString(asset.assetName, this.state.assetName));
+    const currentAssets = [...this.props.assets];
+    const buyIn = currentAssets.filter(asset => isEqualString(asset.id, this.state.id) && isEqualString(asset.assetName, this.state.assetName));
 
     if (buyIn.length === 1) {
       this.setState({
@@ -97,16 +101,18 @@ class AssetsFormHeader extends React.Component {
       });
     }, NOTIFICATION_TIMER_MILISECOND);
   }
+
   render() {
     return (
       <div className='assets-header'>
         <div className='assets-header-input'>
           <span>Asset Name</span>
-          <input name='assetName' type='text' onChange={this.inputTyping} value={this.state.assetName} />
+          <input name='assetName' type='text' onChange={this.inputTyping} value={this.state.assetName}
+                 placeholder={this.state.placeholder}/>
           <span>Asset Id</span>
-          <input name='id' type='text' onChange={this.inputTyping} value={this.state.id} />
+          <input name='id' type='text' onChange={this.inputTyping} value={this.state.id}/>
           <span>Asset Price</span>
-          <input disabled={true} type='text' value={this.state.price} />
+          <input disabled={true} type='text' value={this.state.price}/>
         </div>
         <button className='assets-header-button' disabled={this.state.enableButton} onClick={this.buyAsset}>
           Buy
