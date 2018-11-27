@@ -1,20 +1,19 @@
 import React from 'react';
+import {Subject} from 'rxjs';
 import Notification from '../Notification';
-import {checkTypingReachAssetMaxLength, isEqualString} from '../../utils';
 import PropTypes from 'prop-types';
 
 const NOTIFICATION_TIMER_MILLISECOND = 5000;
 
 class AssetsFormHeader extends React.Component {
   static defaultProps = {
-    assets: [],
     isAutoFill: false,
     clickedAsset: {},
-    fillInputFieldWithData : ()=>{}
+    fillInputFieldWithData: () => {
+    }
   };
 
   static propTypes = {
-    assets: PropTypes.array.isRequired,
     isAutoFill: PropTypes.bool.isRequired,
     clickedAsset: PropTypes.object.isRequired,
     fillInputFieldWithData: PropTypes.func.isRequired
@@ -36,14 +35,22 @@ class AssetsFormHeader extends React.Component {
 
     this.buyAsset = this.buyAsset.bind(this);
     this.inputTyping = this.inputTyping.bind(this);
+    this.handleBuyInNotification = this.handleBuyInNotification.bind(this);
+    this.buyAsset$ = new Subject();
   }
 
+  componentWillMount() {
+    this.buyAsset$
+      .do(this.handleBuyInNotification)
+      .subscribe();
+  }
 
   componentWillReceiveProps(nextProps) {
     const {assetName = '', id = '', price = ''} = nextProps.clickedAsset;
+    this.clickedAsset = Object.assign({}, nextProps.clickedAsset);
 
     let state = {
-      enableButton: !(nextProps.assets.length === 1 || (checkTypingReachAssetMaxLength(assetName) && checkTypingReachAssetMaxLength(id)))
+      enableButton: nextProps.isAutoFill
     };
     if (nextProps.isAutoFill) {
       state = Object.assign(state, {
@@ -62,6 +69,23 @@ class AssetsFormHeader extends React.Component {
 
   componentWillUnmount() {
     clearTimeout(this.notificationTimer);
+    if (this.buyAsset$) {
+      this.buyAsset$.unsubscribe();
+    }
+  }
+
+  handleBuyInNotification(buyInAsset) {
+    this.setState({
+      showNotification: true,
+      buyAssetValues: Object.assign({}, buyInAsset)
+    });
+
+    clearTimeout(this.notificationTimer);
+    this.notificationTimer = setTimeout(() => {
+      this.setState({
+        showNotification: false
+      });
+    }, NOTIFICATION_TIMER_MILLISECOND);
   }
 
   inputTyping(ev) {
@@ -82,22 +106,7 @@ class AssetsFormHeader extends React.Component {
 
   buyAsset(ev) {
     ev.preventDefault();
-    const currentAssets = [...this.props.assets];
-    const buyIn = currentAssets.filter(asset => isEqualString(asset.id, this.state.id) && isEqualString(asset.assetName, this.state.assetName));
-
-    if (buyIn.length === 1) {
-      this.setState({
-        showNotification: true,
-        buyAssetValues: Object.assign({}, buyIn[0])
-      });
-    }
-
-    clearTimeout(this.notificationTimer);
-    this.notificationTimer = setTimeout(() => {
-      this.setState({
-        showNotification: false
-      });
-    }, NOTIFICATION_TIMER_MILLISECOND);
+    this.buyAsset$.next(this.clickedAsset);
   }
 
   render() {
@@ -112,7 +121,7 @@ class AssetsFormHeader extends React.Component {
           <div>Asset Price</div>
           <input disabled={true} type='text' value={this.state.price}/>
         </div>
-        <button className='assets-header-button' disabled={this.state.enableButton} onClick={this.buyAsset}>
+        <button className='assets-header-button' disabled={!this.state.enableButton} onClick={this.buyAsset}>
           Buy
         </button>
         {this.state.showNotification ? <Notification {...this.state.buyAssetValues} /> : null}

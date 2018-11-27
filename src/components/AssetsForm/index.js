@@ -135,7 +135,6 @@ class AssetsForm extends React.Component {
       <div className='asset-form'>
         <div className='ui form'>
           <AssetsFormHeader
-            assets={this.state.assets}
             filterItemsName={this.filterItemsName}
             filterItemsID={this.filterItemsID}
             clickedAsset={this.state.clickedAsset}
