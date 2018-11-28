@@ -1,35 +1,48 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 
-const Notification = props => {
-  const { assetName, id, price } = props;
+import {subjectBuyAsset} from '../../subjects';
 
-  return (
-    <div className='buy-asset-notification slide-in-out'>
-      <div className='ui message '>
-        <span>Asset Name: </span>
-        <span>{assetName}</span>
-        <div className='ui section divider' />
-        <span>Asset Id: </span>
-        <span>{id}</span>
-        <div className='ui section divider' />
-        <span>Asset Price: </span>
-        <span>{price}</span>
-      </div>
-    </div>
-  );
+class Notification extends React.PureComponent {
+
+  state = {
+    show: false,
+    assetName: '',
+    id: 0,
+    price: 0
+  }
+
+  componentDidMount() {
+    this.buyAsset$ = subjectBuyAsset
+      .do((data) => this.setState(data))
+      .subscribe()
+  }
+
+  componentWillUnmount() {
+    if (this.buyAsset$) {
+      this.buyAsset$.unsubscribe();
+    }
+  }
+
+  render() {
+    const {assetName, id, price} = this.state;
+
+    return (
+      this.state.show ?
+      <div className={`buy-asset-notification slide-in-out`}>
+        <div className='ui message '>
+          <span>Asset Name: </span>
+          <span>{assetName}</span>
+          <div className='ui section divider'/>
+          <span>Asset Id: </span>
+          <span>{id}</span>
+          <div className='ui section divider'/>
+          <span>Asset Price: </span>
+          <span>{price}</span>
+        </div>
+      </div> : null
+    );
+  }
 };
 
-Notification.propTypes = {
-  assetName : PropTypes.string.isRequired,
-  id : PropTypes.number.isRequired,
-  price: PropTypes.number.isRequired
-};
-
-Notification.defaultProps = {
-  assetName : '',
-  id : 0,
-  price: 0
-};
 
 export default Notification;

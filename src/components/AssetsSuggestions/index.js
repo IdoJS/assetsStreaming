@@ -1,28 +1,45 @@
 import React from 'react';
 import AssetsSuggestionsItem from './AssetsSuggestionsItem';
-import PropTypes from 'prop-types';
+import {isSubstring} from '../../utils';
+import {subjectAssets, subjectFilterName} from '../../subjects';
+import {combineLatest} from 'rxjs/observable/combineLatest';
+import {filter, debounceTime} from 'rxjs/operators';
 
-class AssetsSuggestions extends React.Component{
+const MINIMUM_LETTERS_BEFORE_FILTER = 2;
+const DENOUNCE_TIME_MILLISECOND = 100;
 
-  static propTypes = {
-    fillInputFieldWithData : PropTypes.func.isRequired,
-    assets : PropTypes.array.isRequired
-  };
+class AssetsSuggestions extends React.PureComponent {
 
-  static defaultProps = {
-    fillInputFieldWithData : () => {},
-    assets : []
-  };
-
-  shouldComponentUpdate(nextProps){
-    return nextProps.assets.length !== this.props.assets.length
+  state = {
+    assets: []
   }
 
-  render(){
-    const assets = this.props.assets
-      .map((asset, key) => <AssetsSuggestionsItem {...asset} key={key} fillInputFieldWithData={this.props.fillInputFieldWithData} />);
+  componentDidMount() {
+    const extraNameFilter = subjectFilterName.pipe(
+      debounceTime(DENOUNCE_TIME_MILLISECOND),
+      filter(val => val.length >= MINIMUM_LETTERS_BEFORE_FILTER));
 
-    return <div className='ui two cards assets-suggest-list'>{assets}</div>;
+    this.conbine$ = combineLatest(subjectAssets, extraNameFilter)
+      .map(all => {
+        const [assets, name] = all;
+        return assets.filter(asset => isSubstring(asset.assetName, name))
+      })
+      .distinctUntilChanged()
+      .do(assets => this.setState({assets}))
+      .subscribe();
+  }
+
+  componentWillUnmount() {
+    if (this.conbine$) {
+      this.conbine$.unsubscribe();
+    }
+  }
+
+  render() {
+    const assets = this.state.assets
+      .map((asset, key) => <AssetsSuggestionsItem {...asset} key={key}/>);
+
+    return this.state.assets.length > 0 ? <div className='ui two cards assets-suggest-list'>{assets}</div> : null;
   }
 }
 

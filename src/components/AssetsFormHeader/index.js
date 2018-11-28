@@ -1,27 +1,18 @@
 import React from 'react';
-import {Subject} from 'rxjs';
-import Notification from '../Notification';
-import PropTypes from 'prop-types';
+import {
+  subjectAssets,
+  subjectFilterId,
+  subjectFilterName,
+  subjectBuyAsset
+} from '../../subjects';
+import {combineLatest} from 'rxjs/observable/combineLatest';
+import {isSubstring} from '../../utils';
 
 const NOTIFICATION_TIMER_MILLISECOND = 5000;
 
-class AssetsFormHeader extends React.Component {
-  static defaultProps = {
-    isAutoFill: false,
-    clickedAsset: {},
-    fillInputFieldWithData: () => {
-    }
-  };
-
-  static propTypes = {
-    isAutoFill: PropTypes.bool.isRequired,
-    clickedAsset: PropTypes.object.isRequired,
-    fillInputFieldWithData: PropTypes.func.isRequired
-  };
+class AssetsFormHeader extends React.PureComponent {
 
   state = {
-    showNotification: false,
-    buyAssetValues: {},
     assetName: '',
     id: '',
     price: '',
@@ -35,58 +26,31 @@ class AssetsFormHeader extends React.Component {
 
     this.buyAsset = this.buyAsset.bind(this);
     this.inputTyping = this.inputTyping.bind(this);
-    this.handleBuyInNotification = this.handleBuyInNotification.bind(this);
-    this.buyAsset$ = new Subject();
   }
 
   componentWillMount() {
-    this.buyAsset$
-      .do(this.handleBuyInNotification)
+    this.conbine$ = combineLatest(subjectAssets, subjectFilterId)
+      .map(all => {
+        const [assets, id] = all;
+        return assets.filter(asset => isSubstring(asset.id, id))
+      })
+      .distinctUntilChanged()
+      .do(assets => Array.isArray(assets) && assets.length === 1 && this.setState({
+        enableButton: true,
+        ...assets[0]
+      }))
+      .do(assets => Array.isArray(assets) && assets.length === 1 && subjectFilterName.next(assets[0].assetName))
       .subscribe();
-  }
-
-  componentWillReceiveProps(nextProps) {
-    const {assetName = '', id = '', price = ''} = nextProps.clickedAsset;
-    this.clickedAsset = Object.assign({}, nextProps.clickedAsset);
-
-    let state = {
-      enableButton: nextProps.isAutoFill
-    };
-    if (nextProps.isAutoFill) {
-      state = Object.assign(state, {
-        id,
-        assetName,
-        price
-      });
-    } else {
-      state = Object.assign(state, {
-        price: 0
-      });
-    }
-
-    this.setState(state);
   }
 
   componentWillUnmount() {
     clearTimeout(this.notificationTimer);
-    if (this.buyAsset$) {
-      this.buyAsset$.unsubscribe();
+
+    if (this.conbine$) {
+      this.conbine$.unsubscribe();
     }
   }
 
-  handleBuyInNotification(buyInAsset) {
-    this.setState({
-      showNotification: true,
-      buyAssetValues: Object.assign({}, buyInAsset)
-    });
-
-    clearTimeout(this.notificationTimer);
-    this.notificationTimer = setTimeout(() => {
-      this.setState({
-        showNotification: false
-      });
-    }, NOTIFICATION_TIMER_MILLISECOND);
-  }
 
   inputTyping(ev) {
     ev.preventDefault();
@@ -96,17 +60,29 @@ class AssetsFormHeader extends React.Component {
     });
 
     if (ev.target.name === 'assetName') {
-      this.props.filterItemsName(ev.target.value);
+      subjectFilterName.next(ev.target.value);
     }
 
     if (ev.target.name === 'id') {
-      this.props.filterItemsID(ev.target.value);
+      subjectFilterId.next(ev.target.value);
     }
   }
 
   buyAsset(ev) {
     ev.preventDefault();
-    this.buyAsset$.next(this.clickedAsset);
+    subjectBuyAsset.next({
+      show: true,
+      id: this.state.id,
+      assetName: this.state.assetName,
+      price: this.state.price
+    });
+
+    clearTimeout(this.notificationTimer);
+    this.notificationTimer = setTimeout(() => {
+      subjectBuyAsset.next({
+        show: false
+      });
+    }, NOTIFICATION_TIMER_MILLISECOND);
   }
 
   render() {
@@ -124,7 +100,6 @@ class AssetsFormHeader extends React.Component {
         <button className='assets-header-button' disabled={!this.state.enableButton} onClick={this.buyAsset}>
           Buy
         </button>
-        {this.state.showNotification ? <Notification {...this.state.buyAssetValues} /> : null}
       </div>
     );
   }
